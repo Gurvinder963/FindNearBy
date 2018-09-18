@@ -45,7 +45,7 @@ public class SearchViewModel extends ViewModel {
     public SearchViewModel(Context context){
 
         mContext = context.getApplicationContext();
-       // MyApplication.getApp().appComponent.inject(this);
+        MyApplication.getApp().appComponent.inject(this);
 
 
     }

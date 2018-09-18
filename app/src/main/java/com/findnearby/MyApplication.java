@@ -9,7 +9,7 @@ import com.findnearby.di.AppComponent;
 
 public class MyApplication extends Application implements LifecycleObserver {
     private static MyApplication app;
-    static AppComponent appComponent;
+    public static AppComponent appComponent;
 
     public synchronized static MyApplication getInstance() {
         return app;
