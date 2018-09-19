@@ -10,6 +10,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +20,9 @@ import android.widget.Toast;
 
 
 import com.findnearby.R;
+import com.findnearby.adapter.RecentPlacesAdapter;
+import com.findnearby.database.AppDatabase;
+import com.findnearby.database.SearchItem;
 import com.findnearby.databinding.FragmentSearchBinding;
 import com.findnearby.interfaces.OnLoactionFindListner;
 import com.findnearby.response.PlacesResponse;
@@ -40,11 +45,13 @@ public class SearchFragment extends Fragment implements OnLoactionFindListner {
 
     ArrayList<PlacesResponse.CustomA> results;
     private static final int MY_PERMISION_CODE = 10;
-   // FragmentSearchBinding mBinding;
-    private SearchViewModel searchViewModel;
-    //  private  mBinding;
-    FragmentSearchBinding mBinding;
 
+    private SearchViewModel searchViewModel;
+
+    FragmentSearchBinding mBinding;
+    private RecentPlacesAdapter recentPlacesAdapter;
+    RecyclerView recyclerView;
+    ArrayList<SearchItem> arrListRecentSearches;
 
     public static SearchFragment newInstance() {
         SearchFragment fragment = new SearchFragment();
@@ -55,10 +62,9 @@ public class SearchFragment extends Fragment implements OnLoactionFindListner {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         results = new ArrayList<>();
-
+        arrListRecentSearches = new ArrayList<>();
         mBinding = DataBindingUtil.inflate(inflater, R.layout.fragment_search, container, false);
         return mBinding.getRoot();
-
 
 
     }
@@ -69,7 +75,22 @@ public class SearchFragment extends Fragment implements OnLoactionFindListner {
 
         searchViewModel = new SearchViewModel(getContext());
         mBinding.setViewModel(searchViewModel);
+
+        recyclerView = mBinding.recyclerView;
+        recentPlacesAdapter = new RecentPlacesAdapter(getActivity(), arrListRecentSearches);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setAdapter(recentPlacesAdapter);
+
+        getRecentSearchFromDB();
         setObserver();
+    }
+
+    private void getRecentSearchFromDB() {
+        AppDatabase db = AppDatabase.getAppDatabase(getActivity());
+        arrListRecentSearches.addAll(db.userDao().getAll());
+        recentPlacesAdapter.notifyDataSetChanged();
+
     }
 
     private void setObserver() {
@@ -78,7 +99,7 @@ public class SearchFragment extends Fragment implements OnLoactionFindListner {
             @Override
             public void onChanged(@Nullable Object circles) {
 
-              askForPermission();
+                askForPermission();
             }
         });
         searchViewModel.getSearchListEvent().observe(this, new Observer<ArrayList<PlacesResponse.CustomA>>() {
@@ -116,13 +137,14 @@ public class SearchFragment extends Fragment implements OnLoactionFindListner {
 
     @Override
     public void onFind(String loc) {
-        if(mBinding.etSearch.getText().toString().isEmpty()){
+
+        if (mBinding.etSearch.getText().toString().trim().length() > 0) {
+            insertInDataBase(mBinding.etSearch.getText().toString());
+            searchViewModel.fetchPlaces(loc, mBinding.etSearch.getText().toString());
+        } else {
             Toast.makeText(getActivity(), "Please Enter search keyword", Toast.LENGTH_SHORT).show();
         }
-        else {
-            searchViewModel.fetchPlaces(loc,mBinding.etSearch.getText().toString());
-           // fetchPlaces(loc);
-        }
+
     }
 
     @Override
@@ -166,5 +188,14 @@ public class SearchFragment extends Fragment implements OnLoactionFindListner {
                 }
                 break;
         }
+    }
+
+    public void insertInDataBase(String searchItem) {
+
+        AppDatabase db = AppDatabase.getAppDatabase(getActivity());
+        SearchItem item = new SearchItem();
+        item.setName(searchItem);
+        db.userDao().insertAll(item);
+
     }
 }

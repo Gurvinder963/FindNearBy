@@ -9,6 +9,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.view.GravityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -25,7 +27,6 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 3000;
 
 
 
@@ -51,9 +52,11 @@ public class MainActivity extends AppCompatActivity {
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-
-        for (Fragment fragment : getSupportFragmentManager().getFragments()) {
-            fragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (getCurrentFragmentName(SearchFragment.class.getSimpleName())) {
+            Fragment fragment = getSupportFragmentManager().findFragmentByTag(SearchFragment.class.getSimpleName());
+            if (fragment != null) {
+                fragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
+            }
         }
 
 
@@ -64,11 +67,34 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        for (Fragment fragment : getSupportFragmentManager().getFragments()) {
-            fragment.onActivityResult(requestCode, resultCode, data);
+
+
+        if (getCurrentFragmentName(SearchFragment.class.getSimpleName())) {
+            Fragment fragment = getSupportFragmentManager().findFragmentByTag(SearchFragment.class.getSimpleName());
+            if (fragment != null) {
+                fragment.onActivityResult(requestCode, resultCode, data);
+
+            }
         }
 
-    }
 
+    }
+    @Override
+    public void onBackPressed() {
+
+            int count = getSupportFragmentManager().getBackStackEntryCount();
+            if (count == 1)
+            {
+                finish();
+            } else {
+                super.onBackPressed();
+
+            }
+        }
+    private boolean getCurrentFragmentName(String fragmentName) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        String fragmentTag = fragmentManager.getBackStackEntryAt(fragmentManager.getBackStackEntryCount() - 1).getName();
+        return fragmentTag.equalsIgnoreCase(fragmentName);
+    }
 
 }

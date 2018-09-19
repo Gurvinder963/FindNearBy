@@ -111,7 +111,7 @@ public class GetLocation {
 
                 }
                 {
-                   // Toast.makeText(mActivity,"Unable to find location ,Please try again! ", Toast.LENGTH_SHORT).show();
+                  // Toast.makeText(mActivity,"Unable to find location ,Please try again! ", Toast.LENGTH_SHORT).show();
                 }
             }
         });
